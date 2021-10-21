@@ -4,8 +4,17 @@
 #include <fstream>
 #include <regex>
 #include <optional>
+#include <chrono>
 
 using namespace std;
+
+using Raw = vector<string>;
+
+string rawToString(Raw raw);
+
+std::string toString(Raw raw) {
+    return rawToString(raw);
+}
 
 template <typename Key, typename Value>
 class AVL
@@ -48,6 +57,7 @@ class AVL
         }
         
         node * search(Key x){
+            last_search_iters = 0;
             return searchUtil(root,x);
         }
         
@@ -62,6 +72,7 @@ class AVL
             return ret;
         }
         
+        int last_search_iters;
     private:
         void getListUtil(vector<key_value>& ret, node* head) {
             if(head==NULL) return ;
@@ -95,7 +106,7 @@ class AVL
         void inorderUtil(node * head){
             if(head==NULL) return ;
             inorderUtil(head->left);
-            cout<<head->value<<" ";
+            cout << toString(head->value) << " ";
             inorderUtil(head->right);
         }
 
@@ -170,6 +181,7 @@ class AVL
         node * searchUtil(node * head, Key x){
             if(head == NULL) return NULL;
             Key k = head->key;
+            last_search_iters++;
             if(k == x) return head;
             if(k > x) return searchUtil(head->left, x);
             if(k < x) return searchUtil(head->right, x);
@@ -209,7 +221,6 @@ public:
     vector<string> column_names;
 };
 
-using Raw = vector<string>;
 const string delim = "|";
 
 string rawToString(Raw raw) {
@@ -234,6 +245,12 @@ public:
         return tree.search(key)->value;
     }
 
+    Raw& get(size_t key, int &iters) {
+        tree.search(key);
+        iters = tree.last_search_iters;
+        return tree.search(key)->value;
+    }
+
     void set(size_t key, Raw value) {
         auto searched = tree.search(key);
         if(searched == nullptr) {
@@ -245,6 +262,10 @@ public:
 
     void remove(size_t key) {
         tree.remove(key);
+    }
+
+    void print_inorder() {
+        tree.inorder();
     }
 
     void save() {
@@ -305,42 +326,27 @@ private:
 };
 
 int main(){
-    
-    /*AVL<size_t, string> t;
-    t.insert(1, "one");
-    t.insert(2, "two");
-    t.insert(3, "three");
-    t.insert(4, "four");
-    t.insert(5, "five");
-    t.insert(6, "six");
-    t.insert(7, "seven");
-    
-    t.remove(5);
-    t.remove(6);
-    t.remove(7);
-    
-    auto r = t.getList();
-    */
+    // do what task requires
 
-    try {
-        DBConfig cfg(2);
+    try{
+        srand(time(0));
+
+        DBConfig cfg(1);
         DB db(cfg);
-        db.load();
         
-        /*auto res = db.get(1);
+        for(size_t i = 0; i < 10000; i++) {
+            db.set(i, Raw({to_string(i)}));
+        }
 
-        for(auto item : res) cout << item << " ";
-        cout << endl;*/
-        
-        //db.set(1, {"one", "first"});
-        db.remove(1);
-        //db.set(2, {"two", "second"});
-        db.set(3, {"three", "third"});
-        cout << db.get(2)[0] << endl; 
+        for(int i = 0; i < 10; i++) {
+            int iters = 0;
+            db.get(size_t(rand() % 10000), iters);
+            cout << i << ": " << iters << endl;
+        }
+
         db.save();
-            
     } catch(const std::exception& e) {
-        std::cerr << e.what() << '\n';
+        cout << e.what() << endl;
     }
 }
 
