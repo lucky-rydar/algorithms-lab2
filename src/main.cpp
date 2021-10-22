@@ -325,10 +325,31 @@ private:
 
 };
 
-int main(){
+int main(int argc, char** argv){
     // do what task requires
 
-    try{
+    auto file = string(argv[1]);
+    DBConfig cfg(1);
+    cfg.filename = file;
+    DB db(cfg);
+    db.load();
+
+    auto c = string(argv[2]);
+    if(c == "set") {
+        auto key = stoi(string(argv[3]));
+        auto val = string(argv[4]);
+        db.set(key, Raw{val});
+    } else if(c == "get") {
+        auto key = stoi(string(argv[3]));
+        auto val = db.get(key);
+        cout << rawToString(val) << endl;
+    } else if(c == "rm") {
+        auto key = stoi(string(argv[3]));
+        db.remove(key);
+    }
+
+    db.save();
+    /*try{
         srand(time(0));
 
         DBConfig cfg(1);
@@ -347,6 +368,6 @@ int main(){
         db.save();
     } catch(const std::exception& e) {
         cout << e.what() << endl;
-    }
+    }*/
 }
 
